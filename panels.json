@@ -1,0 +1,14 @@
+{
+  "panels": [
+    {
+      "bus": "usb",
+      "vendor": "222a",
+      "product": "0001",
+      "evdev_name": "UsbHID SingWon-CTP-V1.18B",
+      "name": "SingWon 7\" USB touch panel",
+      "width_mm": 165,
+      "height_mm": 100,
+      "notes": "sold as \"7 Inch 165mmx100mm GT911 6Pin IIC Universal USB Drive Capacitive Digitizer Touch Screen Panel Glass\" on Amazon; `hid-multitouch` out of the box"
+    }
+  ]
+}

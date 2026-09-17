@@ -1,0 +1,12 @@
+[Unit]
+Description=Present a supported USB touch panel as a virtual pen tablet (touch2tabletd, user)
+# Device access comes from the seat ACL (70-touch2tablet.rules, see scripts/install-user.sh), not from a display.
+
+[Service]
+ExecStart=%h/.local/bin/touch2tabletd --settings %h/.config/touch2tablet/settings.json --socket %t/touch2tablet/control.sock
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

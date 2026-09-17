@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=touch2tablet
+Comment=Tablet area and display area for a touch panel used as a pen tablet
+Exec=touch2tablet
+Icon=input-tablet
+Terminal=false
+Categories=Settings;HardwareSettings;
