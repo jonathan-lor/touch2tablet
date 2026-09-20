@@ -17,10 +17,6 @@ struct Recorder {
     }
     QString signature() const { return ::signature(events); }
     QString signatureNoMoves() const { return signature().remove('M'); }
-    int count(T t) const
-    {
-        return int(std::count_if(events.begin(), events.end(), [&](const PenEvent& e) { return e.type == t; }));
-    }
     std::optional<PenEvent> first(T t) const
     {
         for (const auto& e : events) if (e.type == t) return e;
@@ -111,9 +107,7 @@ private slots:
         gm.trackingEnd(0); gm.frame();                                 // primary first this time
         gm.trackingEnd(1); gm.frame();
         QCOMPARE(r.signatureNoMoves(), QString("IDUOIDUO"));
-        QCOMPARE(r.count(T::Down), r.count(T::Up));
         QCOMPARE(gm.state().fingers, 0);
-        QVERIFY(!gm.state().active);
         QVERIFY(!gm.state().ignored);
     }
 

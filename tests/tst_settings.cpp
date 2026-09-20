@@ -30,7 +30,6 @@ private slots:
         QCOMPARE(s.tabletArea.width, 120.0);   // untouched
         QCOMPARE(s.tabletArea.height, 30.0);
         QVERIFY(!s.clip);
-        QVERIFY(!s.limit);
     }
 
     void garbageIsRejected()

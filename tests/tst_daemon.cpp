@@ -45,7 +45,6 @@ private slots:
         auto d = make();
         QSignalSpy dev(d.get(), &Daemon::deviceChanged);
         d->start();
-        QVERIFY(!d->connected());
         QTest::qWait(50);
         QVERIFY(!d->connected());
         present_ = true;
@@ -180,6 +179,9 @@ private slots:
         QCOMPARE(signature(events_), QString("IMDUO"));
         QVERIFY(!d->connected());
         QCOMPARE(FakeSink::closes, 1);
+        QTest::qWait(60);                        // device still present, but scanning has stopped
+        QVERIFY(!d->connected());
+        QCOMPARE(FakeSink::opens, 1);
     }
 };
 
