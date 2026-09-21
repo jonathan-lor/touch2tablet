@@ -2,9 +2,21 @@
 
 ## Building
 
+The project requires Linux, CMake 3.22 or newer, Ninja, a C++20 compiler, Qt
+6.5 or newer (Core, Network, Widgets, and Test), `pkg-config`, and libevdev. On
+Debian-based distributions, install the build dependencies with:
+
 ```bash
-sudo apt install build-essential cmake ninja-build qt6-base-dev libevdev-dev
-cmake -S . -B build -G Ninja && cmake --build build && ctest --test-dir build   # build + tests
+sudo apt install build-essential cmake ninja-build pkg-config qt6-base-dev libevdev-dev
+```
+
+Make sure your distribution's `qt6-base-dev` provides Qt 6.5 or newer. Then
+configure, build, and run the tests:
+
+```bash
+cmake -S . -B build -G Ninja
+cmake --build build
+ctest --test-dir build
 ```
 
 The daemon can run without hardware for GUI and protocol work:
