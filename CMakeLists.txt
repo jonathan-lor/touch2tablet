@@ -18,7 +18,11 @@ if(T2T_BUILD_GUI)
 endif()
 qt_standard_project_setup()
 
-add_compile_options(-Wall -Wextra -Wpedantic)
+if(MSVC)
+  add_compile_options(/W4 /permissive- /utf-8)
+else()
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
 add_subdirectory(core)
 add_subdirectory(daemon)

@@ -7,9 +7,13 @@
 // Control socket: see ControlServer.h.  --no-device serves the socket without touching hardware.
 #include "ControlServer.h"
 #include "Daemon.h"
+#ifdef Q_OS_LINUX
 #include "UnixSignals.h"
+#endif
+#ifdef T2T_ENABLE_LINUX_BACKEND
 #include "backend/linux/EvdevTouchSource.h"
 #include "backend/linux/UinputPenSink.h"
+#endif
 #include "t2t/SettingsStore.h"
 
 #include <QCommandLineParser>
@@ -67,13 +71,26 @@ int main(int argc, char** argv)
     parser.addOption(optUdev);
     parser.addOption(optTable);
     parser.process(app);
-    if (parser.isSet(optIdentify) || parser.isSet(optUdev) || parser.isSet(optTable)) {
-        QTextStream(stdout) << (parser.isSet(optIdentify) ? EvdevTouchSource::identify()
-                                : parser.isSet(optUdev)   ? udevRules(panels())
-                                                          : markdownTable(panels()));
+    if (parser.isSet(optIdentify)) {
+#ifdef T2T_ENABLE_LINUX_BACKEND
+        QTextStream(stdout) << EvdevTouchSource::identify();
+        return 0;
+#else
+        QTextStream(stderr) << "Device identification is unavailable: this build has no hardware backend.\n";
+        return 1;
+#endif
+    }
+    if (parser.isSet(optUdev) || parser.isSet(optTable)) {
+        QTextStream(stdout) << (parser.isSet(optUdev) ? udevRules(panels()) : markdownTable(panels()));
         return 0;
     }
     const bool noDevice = parser.isSet(optNoDevice);
+#ifndef T2T_ENABLE_LINUX_BACKEND
+    if (!noDevice) {
+        QTextStream(stderr) << "This build has no hardware backend. Use --no-device for GUI and protocol development.\n";
+        return 1;
+    }
+#endif
 
     QTextStream out(stdout);
     const bool underJournal = qEnvironmentVariableIsSet("JOURNAL_STREAM");   // journald stamps lines itself
@@ -90,6 +107,7 @@ int main(int argc, char** argv)
 
     Daemon daemon(
         settings,
+#ifdef T2T_ENABLE_LINUX_BACKEND
         [&logLine, noDevice]() -> std::unique_ptr<ITouchSource> {
             if (noDevice) return nullptr;
             QString err;
@@ -101,12 +119,17 @@ int main(int argc, char** argv)
             }
             return std::unique_ptr<ITouchSource>(std::move(src));
         },
-        [] { return std::unique_ptr<IPenSink>(std::make_unique<UinputPenSink>()); });
+        [] { return std::unique_ptr<IPenSink>(std::make_unique<UinputPenSink>()); }
+#else
+        {}, {}
+#endif
+    );
     QObject::connect(&daemon, &Daemon::log, &app, logLine);
 
     ControlServer control(daemon, ControlServer::Config{parser.value(optSocket), parser.value(optSettings)});
     control.addLogLine(note);
 
+#ifdef Q_OS_LINUX
     UnixSignals unixSignals;
     QObject::connect(&unixSignals, &UnixSignals::terminate, &app, [&](int signo) {
         logLine(QStringLiteral("signal %1: shutting down").arg(signo));
@@ -118,6 +141,7 @@ int main(int argc, char** argv)
         daemon.applySettings(loadSettings(parser.value(optSettings), &n));
         logLine(QStringLiteral("SIGHUP: %1").arg(n)); control.addLogLine(QStringLiteral("SIGHUP: %1").arg(n));
     });
+#endif
 
     {
         QString err;
