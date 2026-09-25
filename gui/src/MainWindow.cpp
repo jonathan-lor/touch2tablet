@@ -22,6 +22,11 @@
 #include <QWindow>
 #include <cmath>
 #include <string_view>
+#ifdef Q_OS_WIN
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#endif
 
 namespace t2t {
 
@@ -243,7 +248,13 @@ void MainWindow::buildMenu()
     file->addSeparator();
     actReset_ = file->addAction(QStringLiteral("Reset to defaults"), this, &MainWindow::resetToDefaults);
     file->addSeparator();
+#ifdef Q_OS_WIN
+    file->addAction(QStringLiteral("Enable tablet mode"), this, [this] { client_.request({{"op", "start"}}); });
+    file->addAction(QStringLiteral("Use as touchscreen"), this, [this] { client_.request({{"op", "stop"}}); });
+    file->addAction(QStringLiteral("Close window (keep running)"), QKeySequence::Close, this, &QWidget::close);
+#else
     file->addAction(QStringLiteral("Quit"), QKeySequence::Quit, this, &QWidget::close);
+#endif
 }
 
 // -- presets: whole (or partial) settings files next to settings.json, applied live ---------
@@ -430,13 +441,13 @@ void MainWindow::updateStatus(const QString& extra)
         parts << QStringLiteral("daemon: not connected");
     } else {
         const QString tp = info_.value("touch_path").toString();
-        parts << (tp.isEmpty() ? QStringLiteral("panel: not plugged in") : QStringLiteral("panel: %1").arg(tp));
+        parts << (tp.isEmpty() ? QStringLiteral("panel: not attached (see Console)") : QStringLiteral("panel: %1").arg(tp));
         const QString vp = info_.value("tablet_path").toString();
         if (!vp.isEmpty()) parts << QStringLiteral("virtual tablet: %1").arg(vp);
         if (isDirty()) parts << QStringLiteral("unapplied changes");
     }
     const QJsonObject panel = info_.value("panel").toObject();
-    panelName_->setText(panel.isEmpty() ? QStringLiteral("not plugged in") : panel.value("name").toString());
+    panelName_->setText(panel.isEmpty() ? QStringLiteral("not attached") : panel.value("name").toString());
     glassSize_->setText(!haveSettings_ ? QString()
                         : QStringLiteral("%1 x %2 mm%3").arg(s_.tablet.width).arg(s_.tablet.height)
                               .arg(panel.isEmpty() ? QStringLiteral(" (last connected panel)") : QString()));
@@ -496,10 +507,26 @@ void MainWindow::detectMonitor()
     QScreen* scr = windowHandle() ? windowHandle()->screen() : nullptr;
     if (!scr) scr = QGuiApplication::primaryScreen();
     if (!scr) { logLine(QStringLiteral("error: no screen found")); return; }
+#ifdef Q_OS_WIN
+    // QScreen::name() is a friendly label, not the GDI device name used by
+    // the daemon's GetMonitorInfo lookup. Use the same native identity and
+    // physical bounds, including on desktops with mixed display scaling.
+    MONITORINFOEXW monitor{};
+    monitor.cbSize = sizeof(monitor);
+    const auto handle = MonitorFromWindow(reinterpret_cast<HWND>(winId()), MONITOR_DEFAULTTONEAREST);
+    if (!handle || !GetMonitorInfoW(handle, &monitor)) {
+        logLine(QStringLiteral("error: could not identify the Windows monitor"));
+        return;
+    }
+    s_.display.output = QString::fromWCharArray(monitor.szDevice);
+    s_.display.width = monitor.rcMonitor.right - monitor.rcMonitor.left;
+    s_.display.height = monitor.rcMonitor.bottom - monitor.rcMonitor.top;
+#else
     const QRect g = scr->geometry();
     const double dpr = scr->devicePixelRatio();
     s_.display.width = qRound(g.width() * dpr);
     s_.display.height = qRound(g.height() * dpr);
+#endif
     const QSizeF mm = scr->physicalSize();
     if (mm.width() > 0 && mm.height() > 0) { s_.display.widthMm = mm.width(); s_.display.heightMm = mm.height(); }
     logLine(QStringLiteral("detected monitor %1: %2x%3 px, %4x%5 mm").arg(scr->name())
@@ -525,7 +552,11 @@ void MainWindow::onReply(const QJsonObject& r)
 
 void MainWindow::onState(bool connected, const QString& msg)
 {
+#ifdef Q_OS_WIN
+    banner_->setText(connected ? QString() : QStringLiteral("%1 — waiting for the installed Windows daemon. See Console for details.").arg(msg));
+#else
     banner_->setText(connected ? QString() : QStringLiteral("%1  —  is touch2tablet.service running?  (systemctl --user status touch2tablet)").arg(msg));
+#endif
     banner_->setVisible(!connected);
     if (!connected) {
         dispCanvas_->setDot(std::nullopt);

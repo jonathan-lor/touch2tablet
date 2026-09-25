@@ -35,6 +35,11 @@ public:
     void applySettings(const Settings& s);
 
     bool connected() const { return source_ != nullptr; }
+    bool running() const { return running_; }
+    quint64 frameCount() const { return frameCount_; }
+    std::optional<GestureMachine::State> inputState() const {
+        return machine_ ? std::optional<GestureMachine::State>(machine_->state()) : std::nullopt;
+    }
     std::optional<ITouchSource::Info> sourceInfo() const;
     QString sinkPath() const;
 
@@ -52,6 +57,7 @@ private:
     void attach(std::unique_ptr<ITouchSource> src);
     void detach(const QString& why);
     void onFrame(const TouchFrame& f);
+    void recoverOutput();
     Settings fitted(Settings s);
 
     Settings settings_;
@@ -61,6 +67,9 @@ private:
     std::unique_ptr<IPenSink> sink_;
     std::unique_ptr<GestureMachine> machine_;
     QTimer scanTimer_;
+    bool running_ = false;
+    bool recoveryPending_ = false;
+    quint64 frameCount_ = 0;
 };
 
 }  // namespace t2t

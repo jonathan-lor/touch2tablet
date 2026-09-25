@@ -15,6 +15,7 @@ Daemon::~Daemon()
 
 void Daemon::start()
 {
+    running_ = true;
     scan();
     if (!source_)
         scanTimer_.start(scanIntervalMs);
@@ -22,6 +23,7 @@ void Daemon::start()
 
 void Daemon::stop()
 {
+    running_ = false;
     scanTimer_.stop();
     if (source_)
         detach(QStringLiteral("shutdown"));
@@ -31,7 +33,7 @@ void Daemon::stop()
 
 void Daemon::scan()
 {
-    if (source_)
+    if (source_ || !running_)
         return;
     std::unique_ptr<ITouchSource> src = probe_ ? probe_() : nullptr;
     if (src)
@@ -77,6 +79,7 @@ void Daemon::attach(std::unique_ptr<ITouchSource> src)
 
 void Daemon::detach(const QString& why)
 {
+    recoveryPending_ = false;
     if (machine_)
         machine_->reset();
     machine_.reset();
@@ -106,7 +109,21 @@ void Daemon::onFrame(const TouchFrame& f)
         }
     }
     machine_->frame();
+    ++frameCount_;
     emit frameProcessed(machine_->state());
+    recoverOutput();
+}
+
+void Daemon::recoverOutput()
+{
+    if (!source_ || !sink_ || sink_->isOpen() || recoveryPending_) return;
+    recoveryPending_ = true;
+    const QString reason = sink_->lastError();
+    // Wait until any native input callback has returned before deleting its source.
+    QTimer::singleShot(0, source_.get(), [this, reason] {
+        detach(QStringLiteral("pen output failed: %1").arg(reason));
+        if (running_) scanTimer_.start(scanIntervalMs);
+    });
 }
 
 // -- settings -----------------------------------------------------------------------------
@@ -141,6 +158,7 @@ void Daemon::applySettings(const Settings& requested)
     }
     if (machine_)
         machine_->setSettings(s);
+    recoverOutput();
     emit log(QStringLiteral("settings applied: tablet area %1x%2mm @(%3,%4) rot %5 -> display %6x%7 @(%8,%9); clip %10 limit %11")
                  .arg(s.tabletArea.width, 0, 'f', 2).arg(s.tabletArea.height, 0, 'f', 2)
                  .arg(s.tabletArea.x, 0, 'f', 2).arg(s.tabletArea.y, 0, 'f', 2).arg(s.tabletArea.rotation, 0, 'f', 1)

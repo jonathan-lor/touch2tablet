@@ -37,12 +37,14 @@ ControlServer::~ControlServer()
 
 bool ControlServer::listen(QString* err)
 {
+#ifndef Q_OS_WIN
     const QDir dir = QFileInfo(cfg_.socketName).dir();
     if (!dir.exists() && !dir.mkpath(QStringLiteral("."))) {
         if (err) *err = QStringLiteral("cannot create %1").arg(dir.path());
         return false;
     }
     QLocalServer::removeServer(cfg_.socketName);   // stale file from a crash
+#endif
     if (!server_.listen(cfg_.socketName)) {
         if (err) *err = server_.errorString();
         return false;
@@ -132,6 +134,13 @@ void ControlServer::handle(QLocalSocket* s, const QByteArray& line)
             }
         }
         rep.insert("settings", s2.toJson());
+    } else if (op == u"shutdown") {
+        daemon_.stop();
+        QTimer::singleShot(100, this, &ControlServer::shutdownRequested);
+    } else if (op == u"start" || op == u"stop") {
+        if (op == u"start") daemon_.start(); else daemon_.stop();
+        rep.insert("info", info());
+        broadcast(QJsonObject{{"ev", "device"}, {"info", info()}});
     } else if (op == u"reset") {
         daemon_.applySettings(Settings::defaults());
         rep.insert("settings", daemon_.settings().toJson());
@@ -175,6 +184,8 @@ QJsonObject ControlServer::info() const
 {
     QJsonObject o{
         {"connected", daemon_.connected()},
+        {"running", daemon_.running()},
+        {"frames_processed", qint64(daemon_.frameCount())},
         {"touch_path", QJsonValue::Null},
         {"raw", QJsonValue::Null},
         {"panel", QJsonValue::Null},
@@ -191,6 +202,9 @@ QJsonObject ControlServer::info() const
     }
     if (const QString p = daemon_.sinkPath(); !p.isEmpty())
         o.insert("tablet_path", p);
+    if (const auto st = daemon_.inputState())
+        o.insert("input", QJsonObject{{"fingers", st->fingers}, {"active", st->active},
+            {"raw", QJsonArray{st->rawX, st->rawY}}, {"out", QJsonArray{st->mapped.x, st->mapped.y}}});
     return o;
 }
 

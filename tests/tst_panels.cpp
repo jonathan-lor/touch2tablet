@@ -86,7 +86,7 @@ private slots:
     void docsTableIsCurrent()
     {
         QFile f(QStringLiteral(T2T_SOURCE_DIR "/docs/supported-panels.md"));
-        QVERIFY(f.open(QIODevice::ReadOnly));
+        QVERIFY(f.open(QIODevice::ReadOnly | QIODevice::Text));
         const QString doc = QString::fromUtf8(f.readAll());
         const QString begin = QStringLiteral("<!-- panels:begin -->\n"), end = QStringLiteral("<!-- panels:end -->");
         const qsizetype a = doc.indexOf(begin), b = doc.indexOf(end);

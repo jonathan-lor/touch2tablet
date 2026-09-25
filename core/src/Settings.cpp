@@ -45,6 +45,8 @@ Settings Settings::applied(const Settings& base, const QJsonObject& json)
         s.display.height = inum(d, "height", s.display.height, 16, 32768);
         s.display.widthMm = num(d, "width_mm", s.display.widthMm, 10, 5000);
         s.display.heightMm = num(d, "height_mm", s.display.heightMm, 10, 5000);
+        if (d.value("output").isString() && d.value("output").toString().size() <= 128)
+            s.display.output = d.value("output").toString();
     }
     if (const auto d = section(json, "display_area"); !d.isEmpty()) {
         s.displayArea.width = num(d, "width", s.displayArea.width, 1, 65536);
@@ -77,7 +79,8 @@ QJsonObject Settings::toJson() const
     return QJsonObject{
         {"version", 1},
         {"display", QJsonObject{{"width", display.width}, {"height", display.height},
-                                {"width_mm", display.widthMm}, {"height_mm", display.heightMm}}},
+                                {"width_mm", display.widthMm}, {"height_mm", display.heightMm},
+                                {"output", display.output}}},
         {"display_area", QJsonObject{{"width", displayArea.width}, {"height", displayArea.height},
                                      {"x", displayArea.x}, {"y", displayArea.y}}},
         {"tablet", QJsonObject{{"width", tablet.width}, {"height", tablet.height}}},

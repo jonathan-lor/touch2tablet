@@ -52,6 +52,9 @@ public:
     QJsonObject info() const;
     int clientCount() const { return int(clients_.size()); }
 
+signals:
+    void shutdownRequested();
+
 private:
     struct Client {
         QByteArray buf;

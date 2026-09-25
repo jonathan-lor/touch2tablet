@@ -12,3 +12,7 @@ target_link_libraries(t2t_guilib PUBLIC t2t_core Qt6::Widgets Qt6::Network)
 
 qt_add_executable(touch2tablet src/main.cpp)
 target_link_libraries(touch2tablet PRIVATE t2t_guilib)
+if(WIN32)
+  set_target_properties(touch2tablet PROPERTIES WIN32_EXECUTABLE TRUE)
+  target_link_libraries(touch2tablet PRIVATE shell32)
+endif()
