@@ -25,12 +25,16 @@ public:
 struct FakeSink : t2t::IPenSink {
     static inline std::vector<t2t::PenEvent>* events = nullptr;   // optional shared recorder
     static inline int opens = 0, closes = 0;
+    static inline bool failNextEvent = false;
     bool open_ = false;
     t2t::Settings opened;
     bool open(const t2t::Settings& s, QString*) override { open_ = true; opened = s; ++opens; return true; }
     void close() override { if (open_) ++closes; open_ = false; }
     bool isOpen() const override { return open_; }
     bool needsReopen(const t2t::Settings& s) const override { return !open_ || s.display != opened.display; }
-    void handle(const t2t::PenEvent& e) override { if (events) events->push_back(e); }
+    void handle(const t2t::PenEvent& e) override {
+        if (failNextEvent) { failNextEvent = false; open_ = false; return; }
+        if (events) events->push_back(e);
+    }
     QString path() const override { return QStringLiteral("/dev/fakepen"); }
 };

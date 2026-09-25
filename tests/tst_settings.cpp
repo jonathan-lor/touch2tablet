@@ -15,6 +15,7 @@ private slots:
         s.displayArea = {1280.0, 720.0, 640.0, 360.0};
         s.limit = true;
         s.lockAspect = true;
+        s.display.output = QStringLiteral("\\\\.\\DISPLAY2");
         const QJsonObject j = s.toJson();
         QCOMPARE(j.value("version").toInt(), 1);
         QCOMPARE(j.value("tablet_area").toObject().value("rotation").toDouble(), 15.0);

@@ -38,6 +38,38 @@ class DaemonTest : public QObject {
     }
 
 private slots:
+    void outputFailureRecoversWithoutDeletingSourceInCallback()
+    {
+        present_ = true;
+        auto d = make();
+        d->start();
+        FakeSink::failNextEvent = true;
+        src_->begin(0, 100, 100);
+        QVERIFY(d->connected()); // source lives until its input callback returns
+        QTRY_VERIFY_WITH_TIMEOUT(FakeSink::opens == 2, 500);
+        QVERIFY(d->connected());
+        events_.clear();
+        src_->begin(0, 200, 200);
+        src_->end(0);
+        QCOMPARE(signature(events_), QString("IMDUO"));
+    }
+
+    void stopCancelsPendingRecovery()
+    {
+        present_ = true;
+        auto d = make();
+        d->start();
+        FakeSink::failNextEvent = true;
+        src_->begin(0, 100, 100);
+        d->stop();
+        QTest::qWait(60);
+        QVERIFY(!d->connected());
+        QVERIFY(!d->running());
+        QCOMPARE(FakeSink::opens, 1);
+        d->start();
+        QVERIFY(d->connected());
+    }
+
     void init() { present_ = false; src_ = nullptr; }
 
     void scansUntilDeviceAppears()

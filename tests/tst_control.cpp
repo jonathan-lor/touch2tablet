@@ -88,7 +88,7 @@ private slots:
     void initTestCase()
     {
         QVERIFY(tmp_.isValid());
-        // AF_UNIX paths are short; QTemporaryDir under /tmp is fine.
+        // Qt uses a Unix socket path or a Windows named pipe with this name.
         sockName_ = tmp_.filePath(QStringLiteral("ctl.sock"));
         settingsPath_ = tmp_.filePath(QStringLiteral("cfg/settings.json"));
     }
@@ -111,6 +111,24 @@ private slots:
         QCOMPARE(info.value("panel").toObject().value("width_mm").toDouble(), 165.0);
         QCOMPARE(info.value("settings_path").toString(), settingsPath_);
         QCOMPARE(info.value("proto").toInt(), 1);
+    }
+
+    void pauseResumeAndShutdown()
+    {
+        startServer();
+        Client c; QVERIFY(c.connect(sockName_));
+        QVERIFY(c.rpc({{"op", "stop"}}).value("ok").toBool());
+        QVERIFY(!daemon_->running());
+        QVERIFY(!daemon_->connected());
+        QTest::qWait(60);
+        QVERIFY(!daemon_->connected());
+        const auto started = c.rpc({{"op", "start"}});
+        QVERIFY(started.value("info").toObject().value("running").toBool());
+        QVERIFY(daemon_->connected());
+        QSignalSpy shutdown(server_.get(), &ControlServer::shutdownRequested);
+        QVERIFY(c.rpc({{"op", "shutdown"}}).value("ok").toBool());
+        QVERIFY(!daemon_->connected());
+        QTRY_COMPARE(shutdown.count(), 1);
     }
 
     void applyMergesAndIsLive()
@@ -150,14 +168,18 @@ private slots:
 
     void saveFailureIsReported()
     {
-        settingsPath_ = QStringLiteral("/proc/nope/settings.json");   // unwritable
+        // A regular file cannot contain a child, on either Unix or Windows.
+        QFile blocker(tmp_.filePath(QStringLiteral("not-a-directory")));
+        QVERIFY(blocker.open(QIODevice::WriteOnly));
+        blocker.close();
+        settingsPath_ = blocker.fileName() + QStringLiteral("/settings.json");
         startServer();
         Client c; QVERIFY(c.connect(sockName_));
         const QJsonObject r = c.rpc({{"op", "save"}, {"settings", QJsonObject{}}});
+        settingsPath_ = tmp_.filePath(QStringLiteral("cfg/settings.json"));
         QVERIFY(!r.value("ok").toBool());
         QVERIFY(r.value("error").toString().startsWith("save failed"));
         QVERIFY(r.contains("settings"));   // still tells the client what is live
-        settingsPath_ = tmp_.filePath(QStringLiteral("cfg/settings.json"));
     }
 
     void resetRestoresDefaults()
@@ -239,18 +261,28 @@ private slots:
 
     void staleSocketFileIsReplaced()
     {
+#ifdef Q_OS_WIN
+        QSKIP("Windows named pipes do not leave stale socket files");
+#else
         QFile f(sockName_); QVERIFY(f.open(QIODevice::WriteOnly)); f.write("junk"); f.close();
         startServer();
         Client c; QVERIFY(c.connect(sockName_));
         QVERIFY(c.rpc({{"op", "get"}}).value("ok").toBool());
+#endif
     }
 
-    void socketRemovedOnShutdown()
+    void endpointClosedOnShutdown()
     {
         startServer();
+#ifndef Q_OS_WIN
         QVERIFY(QFile::exists(sockName_));
+#endif
         server_.reset();
+#ifndef Q_OS_WIN
         QVERIFY(!QFile::exists(sockName_));
+#endif
+        Client c;
+        QVERIFY(!c.connect(sockName_));
     }
 };
 

@@ -10,6 +10,7 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QString>
 
 namespace t2t {
 
@@ -18,6 +19,7 @@ struct Display {
     int height = 1440;
     double widthMm = 597.0;
     double heightMm = 336.0;
+    QString output; // Windows display device name; empty follows the primary monitor.
     bool operator==(const Display&) const = default;
 };
 

@@ -1,6 +1,6 @@
 # touch2tablet
 
-User mode Linux daemon and [OpenTabletDriver](https://github.com/OpenTabletDriver/OpenTabletDriver)-style GUI that turns a multitouch panel into an absolute-positioned pen tablet.
+User mode daemon and [OpenTabletDriver](https://github.com/OpenTabletDriver/OpenTabletDriver)-style GUI that turns a multitouch panel into an absolute-positioned tablet. Supports Linux and Windows; see [Windows setup and limitations](docs/windows.md).
 
 ![touch2tablet GUI screenshot](assets/gui_screenshot.png)
 
@@ -14,7 +14,7 @@ User mode Linux daemon and [OpenTabletDriver](https://github.com/OpenTabletDrive
 
 See [Supported Panels](docs/supported-panels.md) for compatible devices and steps for adding one.
 
-## Quick Start
+## Quick Start (Linux)
 
 touch2tablet requires Linux with udev and a systemd user session, CMake >=3.22,
 Ninja, a C++20 compiler, Qt >=6.5, `pkg-config`, and libevdev.
@@ -42,10 +42,12 @@ systemctl --user disable --now touch2tablet     # back to plain touchscreen beha
 
 Settings are in `~/.config/touch2tablet/settings.json` (`--settings`). In the
 GUI, **Apply** changes the live mapping and **Save** actually writes and persists it.
+On Windows, settings are in `%LOCALAPPDATA%\touch2tablet`.
 The glass size comes from the panel's entry in `panels.json`.
+`display.output` is a Windows monitor device name; empty follows the primary monitor. Linux ignores this field.
 
 ```
-display       {width, height, width_mm, height_mm}   monitor the virtual tablet spans
+display       {width, height, width_mm, height_mm, output}   monitor the virtual tablet spans
 display_area  {width, height, x, y}                  px, center-based
 tablet        {width, height}                        glass active area, mm; the daemon sets it from the panel
 tablet_area   {width, height, x, y, rotation}        mm, center-based, degrees clockwise

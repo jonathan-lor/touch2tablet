@@ -25,6 +25,7 @@ public:
     virtual void handle(const PenEvent& ev) = 0;
 
     virtual QString path() const = 0;   // node / identifier for logs and status
+    virtual QString lastError() const { return QStringLiteral("Pen output unavailable"); }
 };
 
 }  // namespace t2t
