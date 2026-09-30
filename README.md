@@ -17,21 +17,20 @@ See [Supported Panels](docs/supported-panels.md) for compatible devices and how 
 ## Quick Start (Linux)
 
 You need an x86_64 distribution from 2022 or later with udev, a systemd user session and libevdev.
-Download the latest release and run its installer (it asks for sudo once, to add a udev rule):
+Download the latest release and run its installer (needs sudo for udev rule):
 
 ```bash
 curl -L https://github.com/jonathan-lor/touch2tablet/releases/latest/download/touch2tablet-linux-x86_64.tar.gz | tar xz
 ./touch2tablet/install.sh
 ```
 
-Run the same commands again to update. To build from source instead, see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+Run the same commands again to update. 
 
 Plug in a supported panel and the service should grab it and present "touch2tablet Absolute
 Mouse" ("touch2tablet Pen Tablet" in [pen mode](#output-modes)). Open **touch2tablet** from the
 application menu or run `touch2tablet` to edit the mapping.
 
-The daemon runs as a systemd user service:
+touch2tablet daemon runs as a systemd user service:
 
 ```bash
 systemctl --user status touch2tablet
@@ -42,23 +41,7 @@ systemctl --user disable --now touch2tablet     # back to plain touchscreen beha
 
 ## Settings and Presets
 
-Settings live in `~/.config/touch2tablet/settings.json` (`%LOCALAPPDATA%\touch2tablet\settings.json` on Windows).
-
-```
-display       {width, height, width_mm, height_mm, output}  monitor size in px and mm
-display_area  {width, height, x, y}                         px, center-based
-tablet        {width, height}                               glass size in mm, from panels.json
-tablet_area   {width, height, x, y, rotation}               mm, center-based, degrees clockwise
-clip, limit   bools                                         see How It Works
-lock_aspect   bool                                          GUI hint only
-output_mode   "mouse" or "pen"                              see Output Modes
-```
-
-`display.output` is for a Windows monitor (empty means the primary one). Linux ignores it.
-
-Presets are settings files in the `presets` folder next to the settings file. **File > Save as
-preset...** writes one and **File > Presets** applies one. A preset can be partial, e.g. only
-`tablet_area`.
+Settings live in `~/.config/touch2tablet/settings.json` on Linux and `%LOCALAPPDATA%\touch2tablet\settings.json` on Windows.
 
 ## How It Works
 
@@ -71,27 +54,19 @@ a touchscreen. The daemon:
 3. scales the result into the display area,
 4. and moves the virtual mouse or pen there.
 
-Output always stays on the display. With `clip`, a touch outside the tablet area is held at the
-area's nearest edge. With `limit`, a stroke that starts outside the tablet area is ignored until
-*every* finger has lifted.
-
 ### Touch Behavior
 
 Only the first finger controls the pointer! Additional contacts won't affect the stroke. The
-finger acts as a held left button (a pressed pen tip in pen mode) with no pressure, hover or
-right click. When it lifts, the stroke ends and any fingers still on the panel are ignored
+finger acts as a held left button with no pressure, hover or right click.
+When it lifts, the stroke ends and any fingers still on the panel are ignored
 until all of them have lifted.
 
 ### Output Modes
 
 `output_mode` (**Output mode** in the GUI) sets what applications see:
 
-- `mouse` (default): an absolute mouse, which works wherever a mouse does. On Wayland,
-  applications that lock the pointer for relative motion, such as games with a raw or high
-  precision mouse option, get no movement from it so turn that option off. A left-handed mouse
-  setting turns taps into right clicks.
-- `pen` (Linux only): a pen tablet, for applications that read pen input. Some applications
-  treat pen input differently from a mouse, or not at all.
+- `mouse` (default): an absolute mouse. **This is what you should use for osu!**
+- `pen` (Linux only): a pen tablet for applications that read pen input.
 
 In mouse mode the compositor spreads the device over the whole desktop, so with several monitors
 set `display` to the whole desktop and place `display_area` on the monitor you want.
