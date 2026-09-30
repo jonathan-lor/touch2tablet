@@ -26,7 +26,7 @@ sudo apt install build-essential cmake ninja-build pkg-config qt6-base-dev libev
 
 Plug in a supported panel and the service should grab it and present "touch2tablet Absolute
 Mouse" ("touch2tablet Pen Tablet" in [pen mode](#output-modes)). Open **touch2tablet** from the
-application menu, or run `touch2tablet`, to edit the mapping.
+application menu or run `touch2tablet` to edit the mapping.
 
 The daemon runs as a systemd user service:
 
@@ -51,7 +51,7 @@ lock_aspect   bool                                          GUI hint only
 output_mode   "mouse" or "pen"                              see Output Modes
 ```
 
-`display.output` names a Windows monitor (empty means the primary one) and Linux ignores it.
+`display.output` is for a Windows monitor (empty means the primary one). Linux ignores it.
 
 Presets are settings files in the `presets` folder next to the settings file. **File > Save as
 preset...** writes one and **File > Presets** applies one. A preset can be partial, e.g. only
@@ -59,7 +59,7 @@ preset...** writes one and **File > Presets** applies one. A preset can be parti
 
 ## How It Works
 
-touch2tablet grabs the panel's multitouch input and turns the first finger into a single
+Basically touch2tablet grabs the panel's multitouch input and turns the first finger into a single
 absolute pointer, so applications see an absolute mouse (or a pen tablet in pen mode) instead of
 a touchscreen. The daemon:
 
@@ -74,9 +74,9 @@ area's nearest edge. With `limit`, a stroke that starts outside the tablet area 
 
 ### Touch Behavior
 
-Only the first finger controls the pointer; additional contacts don't affect the stroke. The
-finger acts as a held left button (a pressed pen tip in pen mode), with no pressure, hover or
-right click. When it lifts, the stroke ends, and any fingers still on the panel are ignored
+Only the first finger controls the pointer! Additional contacts won't affect the stroke. The
+finger acts as a held left button (a pressed pen tip in pen mode) with no pressure, hover or
+right click. When it lifts, the stroke ends and any fingers still on the panel are ignored
 until all of them have lifted.
 
 ### Output Modes
@@ -85,7 +85,7 @@ until all of them have lifted.
 
 - `mouse` (default): an absolute mouse, which works wherever a mouse does. On Wayland,
   applications that lock the pointer for relative motion, such as games with a raw or high
-  precision mouse option, get no movement from it; turn that option off. A left-handed mouse
+  precision mouse option, get no movement from it so turn that option off. A left-handed mouse
   setting turns taps into right clicks.
 - `pen` (Linux only): a pen tablet, for applications that read pen input. Some applications
   treat pen input differently from a mouse, or not at all.
@@ -113,8 +113,7 @@ sudo udevadm control --reload
 sudo udevadm trigger
 ```
 
-This leaves settings and presets in `~/.config/touch2tablet/`; delete that directory too if you no
-longer want them.
+This leaves settings and presets in `~/.config/touch2tablet/`. Delete that directory too if you don't want them anymore.
 
 ## License
 

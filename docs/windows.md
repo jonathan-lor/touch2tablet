@@ -54,13 +54,8 @@ To uninstall, turn off **Start with Windows**, choose **Exit and restore touchsc
 
 ## Limitations
 
-- Only one touchscreen may be connected. Windows redirects all touch input at once, so capture
-  is refused while another touchscreen is present.
-- The output is always an absolute mouse (`output_mode` is ignored). There is no pen, WinTab or
-  pressure output.
-- Hardware testing used the supported SingWon panel on a laptop with an external monitor,
-  including release osu!lazer (no modified osu-framework needed), reconnects, sleep/resume and
-  startup after reboot. Forced-crash recovery and unusual display or DPI setups are untested.
+- Only one touchscreen can be connected at a time. Windows redirects all touch input at once.
+- The output is always an absolute mouse (`output_mode` is ignored). There is no pen, WinTab or pressure output.
 
 Output follows OpenTabletDriver's absolute-mouse approach. See its
 [Windows compatibility notes](https://opentabletdriver.net/Wiki/FAQ/WindowsAppSpecific).

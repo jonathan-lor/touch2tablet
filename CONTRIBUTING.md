@@ -1,6 +1,6 @@
 # Contributing
 
-## Building on Linux
+## Linux
 
 You need CMake 3.22+, Ninja, a C++20 compiler, Qt 6.5+ (Core, Network, Widgets and Test),
 `pkg-config` and libevdev. On Debian-based distributions (check that `qt6-base-dev` is 6.5+):
@@ -21,7 +21,7 @@ The daemon runs without hardware for GUI and protocol work:
 
 The control socket protocol is in [docs/protocol.md](docs/protocol.md).
 
-## Building on Windows
+## Windows
 
 Install Visual Studio 2022 Build Tools with **Desktop development with C++** (it includes the
 Windows SDK, CMake and Ninja) and Qt 6.5+ for MSVC. Known-good versions: MSVC 19.44, CMake
