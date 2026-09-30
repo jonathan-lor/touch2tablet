@@ -148,7 +148,7 @@ QString udevRules(const std::vector<Panel>& list)
 {
     QString out = QStringLiteral(
         "# touch2tablet: let the user at the active seat grab the supported touch panels and /dev/uinput,\n"
-        "# so the daemon can run as a user service.  Installed by scripts/install-user.sh from\n"
+        "# so the daemon can run as a user service.  Installed by scripts/install.sh from\n"
         "# `touch2tabletd --print-udev-rules`; do not edit.\n");
     for (const Panel& p : list) {
         QString name = p.name;

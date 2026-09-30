@@ -16,13 +16,16 @@ See [Supported Panels](docs/supported-panels.md) for compatible devices and how 
 
 ## Quick Start (Linux)
 
-You need udev, a systemd user session, CMake 3.22+, Ninja, a C++20 compiler, Qt 6.5+,
-`pkg-config` and libevdev. On Debian-based distributions:
+You need an x86_64 distribution from 2022 or later with udev, a systemd user session and libevdev.
+Download the latest release and run its installer (it asks for sudo once, to add a udev rule):
 
 ```bash
-sudo apt install build-essential cmake ninja-build pkg-config qt6-base-dev libevdev-dev
-./scripts/install-user.sh
+curl -L https://github.com/jonathan-lor/touch2tablet/releases/latest/download/touch2tablet-linux-x86_64.tar.gz | tar xz
+./touch2tablet/install.sh
 ```
+
+Run the same commands again to update. To build from source instead, see
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 Plug in a supported panel and the service should grab it and present "touch2tablet Absolute
 Mouse" ("touch2tablet Pen Tablet" in [pen mode](#output-modes)). Open **touch2tablet** from the
@@ -106,6 +109,7 @@ Stop the service and remove the installed user files and system-wide udev rule:
 systemctl --user disable --now touch2tablet.service
 rm -f "$HOME/.config/systemd/user/touch2tablet.service"
 rm -f "$HOME/.local/bin/touch2tabletd" "$HOME/.local/bin/touch2tablet"
+rm -rf "$HOME/.local/lib/touch2tablet"
 rm -f "$HOME/.local/share/applications/touch2tablet.desktop"
 systemctl --user daemon-reload
 sudo rm -f /etc/udev/rules.d/70-touch2tablet.rules
