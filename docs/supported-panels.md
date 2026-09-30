@@ -1,8 +1,9 @@
 # Supported Panels
 
 Any slotted multitouch panel (`ABS_MT_SLOT` + `ABS_MT_POSITION_X/Y`, e.g. driven by `hid-multitouch`
-or `goodix`) should work, but the daemon only grabs the panels listed here. The table is generated
-from [`panels.json`](../panels.json); edit that instead.
+or `goodix`) should work, but the daemon only grabs the panels listed here.
+
+**Don't edit this table manually!!** It's generated from [`panels.json`](../panels.json) so edit that instead.
 
 <!-- panels:begin -->
 | Panel | Bus | ID | evdev name | Glass | Notes |
@@ -16,7 +17,7 @@ A panel is matched on its evdev bus:vendor:product ID and its evdev name.
 
 1. Plug the panel in and run `build/daemon/touch2tabletd --identify` (after a normal build, see
    [CONTRIBUTING.md](../CONTRIBUTING.md)). It prints a ready-made entry for every multitouch
-   device; with `sudo` it can also read the size from devices that report one.
+   device. With `sudo` it can also read the size from devices that report one.
 2. Paste the entry into `panels.json`. Keep `bus`, `vendor`, `product` and `evdev_name` as
    printed, and fill in:
    - `name`: what the GUI and logs call it, ideally what a buyer would recognize (brand, size,
@@ -28,4 +29,4 @@ A panel is matched on its evdev bus:vendor:product ID and its evdev name.
    rebuild, reinstall the udev rule and restart the daemon.
 4. Commit `panels.json` and `docs/supported-panels.md`.
 
-`ctest` rejects a malformed entry, a duplicate panel, a misspelled key or a stale table.
+`ctest` will reject a malformed entry, a duplicate panel, a misspelled key or a stale table.
