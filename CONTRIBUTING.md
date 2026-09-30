@@ -12,6 +12,8 @@ cmake --build build
 ctest --test-dir build
 ```
 
+`scripts/install-user.sh` builds and installs it for your user, like a release.
+
 The daemon runs without hardware for GUI and protocol work:
 
 ```bash
@@ -62,3 +64,8 @@ build\windows\touch2tablet.exe --socket touch2tablet-dev
 | `tests/` | Qt Test suites and their shared fakes |
 | `panels.json` | the supported panels; built into the daemon, which renders the udev rule and the table in `docs/supported-panels.md` from it |
 | `scripts/` | Linux install and docs update; Windows install, uninstall and control |
+
+## Releases
+
+Bump `VERSION` in `CMakeLists.txt`, then push a matching tag (`git tag v0.2.0 && git push origin
+v0.2.0`). CI builds the Linux tarball with Qt bundled and publishes it as a GitHub release.

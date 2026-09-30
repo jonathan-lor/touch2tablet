@@ -33,3 +33,23 @@ if(T2T_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()
+
+# Linux install tree: `cmake --install` stages it and its install.sh installs it for the user.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND T2T_BUILD_GUI)
+  option(T2T_BUNDLE_QT "Install the Qt libraries and plugins too (release tarballs)" OFF)
+  install(TARGETS touch2tabletd touch2tablet)
+  install(FILES gui/touch2tablet.desktop DESTINATION share/applications)
+  install(FILES daemon/systemd/user/touch2tablet.service DESTINATION lib/systemd/user)
+  install(PROGRAMS scripts/install.sh DESTINATION .)
+  if(T2T_BUNDLE_QT)
+    find_package(Qt6 REQUIRED COMPONENTS WaylandClient)
+    # Qt only deploys plugins of linked modules, so add the Wayland platform and what it loads.
+    qt_import_plugins(touch2tablet INCLUDE Qt6::QWaylandIntegrationPlugin)
+    install(FILES $<TARGET_FILE:Qt6::QWaylandXdgShellIntegrationPlugin>
+      DESTINATION plugins/wayland-shell-integration)
+    install(FILES $<TARGET_FILE:Qt6::QWaylandBradientDecorationPlugin>
+      DESTINATION plugins/wayland-decoration-client)
+    qt_generate_deploy_app_script(TARGET touch2tablet OUTPUT_SCRIPT deploy_script)
+    install(SCRIPT ${deploy_script})
+  endif()
+endif()

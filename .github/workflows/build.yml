@@ -1,0 +1,52 @@
+# Builds and tests on Linux and Windows. A v* tag also publishes the Linux tarball as a release.
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  linux:
+    # The oldest supported runner keeps the tarball's glibc requirement low.
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build libevdev-dev libwayland-dev libxkbcommon-dev libgl-dev libegl-dev
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.8.3
+          archives: qtbase icu qtwayland
+          cache: true
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" -DT2T_BUNDLE_QT=ON
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure
+      - run: |
+          cmake --install build --prefix touch2tablet
+          tar czf touch2tablet-linux-x86_64.tar.gz touch2tablet
+      - uses: actions/upload-artifact@v4
+        with:
+          name: touch2tablet-linux-x86_64
+          path: touch2tablet-linux-x86_64.tar.gz
+      - if: startsWith(github.ref, 'refs/tags/')
+        run: gh release create "$GITHUB_REF_NAME" touch2tablet-linux-x86_64.tar.gz --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.8.3
+          arch: win64_msvc2022_64
+          archives: qtbase
+          cache: true
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure
