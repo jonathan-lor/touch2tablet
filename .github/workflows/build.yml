@@ -25,7 +25,7 @@ jobs:
       - run: cmake --build build
       - run: ctest --test-dir build --output-on-failure
       - run: |
-          cmake --install build --prefix touch2tablet
+          cmake --install build --prefix "$PWD/touch2tablet"   # Qt deploy needs an absolute prefix
           tar czf touch2tablet-linux-x86_64.tar.gz touch2tablet
       - uses: actions/upload-artifact@v4
         with:
