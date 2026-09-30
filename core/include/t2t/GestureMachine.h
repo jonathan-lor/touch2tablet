@@ -47,7 +47,6 @@ public:
     GestureMachine(const Settings& s, const RawRange& raw, Emit sink);
 
     void setSettings(const Settings& s);
-    void setRawRange(const RawRange& raw);
 
     void trackingBegin(int slot);
     void trackingEnd(int slot);

@@ -1,5 +1,5 @@
 [Unit]
-Description=Present a supported USB touch panel as a virtual pen tablet (touch2tabletd, user)
+Description=Present a supported USB touch panel as an absolute mouse or pen tablet (touch2tabletd, user)
 # Device access comes from the seat ACL (70-touch2tablet.rules, see scripts/install-user.sh), not from a display.
 
 [Service]

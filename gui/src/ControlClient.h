@@ -23,12 +23,9 @@ public:
 
     void start();
     bool isConnected() const { return connected_; }
-    QString socketName() const { return name_; }
 
     /// Send a request; `cb` receives the reply (or {"ok":false,"error":"not connected"}).
     void request(QJsonObject req, Callback cb = {});
-
-    int retryIntervalMs = 2000;
 
 signals:
     void stateChanged(bool connected, const QString& message);
@@ -42,6 +39,8 @@ private:
     void onConnected();
     void onReadyRead();
     void onLost(const QString& why);
+
+    static constexpr int kRetryMs = 2000;
 
     QString name_;
     QLocalSocket sock_;

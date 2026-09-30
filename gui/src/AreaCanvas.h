@@ -23,7 +23,6 @@ public:
     AreaCanvas(QString unit, int digits, bool rotatable, QWidget* parent = nullptr);
 
     void setModel(QSizeF outer, const Area& area);
-    const Area& area() const { return area_; }
     void setDot(std::optional<QPointF> pt, bool inside = true);
 
     QMenu* menu() { return &menu_; }

@@ -44,7 +44,7 @@ struct Client {
         }
     }
     QJsonObject rpc(const QJsonObject& o) { send(o); auto r = readLine(); return r ? *r : QJsonObject{{"_timeout", true}}; }
-    /// Read events until one with ev == name shows up (others are returned in `skipped`).
+    /// Read events until one with ev == name shows up; others are skipped.
     std::optional<QJsonObject> waitEvent(const QString& name, int timeoutMs = 1500)
     {
         QElapsedTimer t; t.start();

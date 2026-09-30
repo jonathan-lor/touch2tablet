@@ -1,12 +1,4 @@
-// touch2tablet core: settings model.
-//
-// JSON schema:
-//   display       {width, height, width_mm, height_mm}   monitor the virtual tablet spans
-//   display_area  {width, height, x, y}                  px, center-based
-//   tablet        {width, height}                        glass active area, mm; the daemon sets it
-//                                                        from the attached panel
-//   tablet_area   {width, height, x, y, rotation}        mm, center-based, degrees clockwise
-//   clip, limit, lock_aspect                              bools
+// touch2tablet core: settings model.  The JSON keys are documented in the README.
 #pragma once
 
 #include <QJsonObject>
@@ -37,6 +29,13 @@ struct Tablet {
     bool operator==(const Tablet&) const = default;
 };
 
+/// What the OS sees.
+/// Linux only. Windows always presents an absolute mouse.
+enum class OutputMode {
+    Mouse,   // absolute mouse: works wherever a mouse does
+    Pen,     // pen tablet, for applications that read pen input
+};
+
 struct TabletArea {
     double width = 165.0;
     double height = 100.0;
@@ -54,6 +53,7 @@ struct Settings {
     bool clip = true;          // clamp touches outside the tablet area to its edge
     bool limit = false;        // ignore touch sequences that start outside the tablet area
     bool lockAspect = false;   // GUI hint only
+    OutputMode outputMode = OutputMode::Mouse;
 
     bool operator==(const Settings&) const = default;
 

@@ -16,9 +16,11 @@ private slots:
         s.limit = true;
         s.lockAspect = true;
         s.display.output = QStringLiteral("\\\\.\\DISPLAY2");
+        s.outputMode = OutputMode::Pen;
         const QJsonObject j = s.toJson();
         QCOMPARE(j.value("version").toInt(), 1);
         QCOMPARE(j.value("tablet_area").toObject().value("rotation").toDouble(), 15.0);
+        QCOMPARE(j.value("output_mode").toString(), QStringLiteral("pen"));
         QCOMPARE(Settings::fromJson(j), s);
     }
 
@@ -36,13 +38,15 @@ private slots:
     void garbageIsRejected()
     {
         const auto patch = QJsonDocument::fromJson(
-            R"({"display":{"width":"x","height":1e12},"tablet_area":{"rotation":370,"width":-5},"clip":"yes"})").object();
+            R"({"display":{"width":"x","height":1e12},"tablet_area":{"rotation":370,"width":-5},"clip":"yes",)"
+            R"("output_mode":"tablet"})").object();
         const Settings s = Settings::fromJson(patch);
         QCOMPARE(s.display.width, 2560);          // wrong type -> kept
         QCOMPARE(s.display.height, 32768);        // clamped
         QVERIFY(qAbs(s.tabletArea.rotation - 10.0) < 1e-9);
         QCOMPARE(s.tabletArea.width, 0.5);        // clamped to minimum
         QVERIFY(s.clip);                          // string is not a bool
+        QCOMPARE(s.outputMode, OutputMode::Mouse);  // unknown mode -> kept
         const auto neg = QJsonDocument::fromJson(R"({"tablet_area":{"rotation":-90}})").object();
         QCOMPARE(Settings::fromJson(neg).tabletArea.rotation, 270.0);
     }

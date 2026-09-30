@@ -177,8 +177,23 @@ QWidget* MainWindow::buildOutputTab()
     tabCanvas_->menu()->addSeparator();
     for (QCheckBox* cb : {ckLock_, ckClip_, ckLimit_}) mirror(tabCanvas_->menu(), cb);
 
+    auto* mode = new QWidget;
+    auto* r4 = new QHBoxLayout(mode);
+    r4->setContentsMargins(0, 0, 0, 0);
+    cbOutput_ = new QComboBox;
+    cbOutput_->addItem(QStringLiteral("Absolute mouse"), int(OutputMode::Mouse));
+    cbOutput_->addItem(QStringLiteral("Pen tablet"), int(OutputMode::Pen));
+    cbOutput_->setToolTip(QStringLiteral("What applications see: a mouse that works everywhere, "
+                                         "or a pen tablet for applications that read pen input"));
+    r4->addWidget(field(QStringLiteral("Output mode"), cbOutput_));
+    r4->addStretch(1);
+#ifdef Q_OS_WIN
+    mode->hide();   // Windows always presents a mouse
+#endif
+
     v->addWidget(g1, 1);
     v->addWidget(g2, 1);
+    v->addWidget(mode);
     return page;
 }
 
@@ -195,7 +210,7 @@ QWidget* MainWindow::buildSettingsTab()
     f1->addRow(QStringLiteral("Device"), panelName_);
     f1->addRow(QStringLiteral("Glass"), glassSize_);
 
-    auto* g2 = new QGroupBox(QStringLiteral("Monitor (the virtual tablet spans this)"));
+    auto* g2 = new QGroupBox(QStringLiteral("Monitor (the virtual device spans this)"));
     auto* f2 = new QFormLayout(g2);
     spMW_ = ispin(16, 32768, QStringLiteral(" px"));
     spMH_ = ispin(16, 32768, QStringLiteral(" px"));
@@ -380,6 +395,11 @@ void MainWindow::wire()
     flag(ckLock_, &Settings::lockAspect);
     flag(ckClip_, &Settings::clip);
     flag(ckLimit_, &Settings::limit);
+    connect(cbOutput_, &QComboBox::currentIndexChanged, this, [this] {
+        if (syncing_ || !haveSettings_) return;
+        s_.outputMode = OutputMode(cbOutput_->currentData().toInt());
+        changed();
+    });
 
     // "Lock to usable area" is a GUI preference, remembered per canvas.
     QSettings prefs;
@@ -428,6 +448,7 @@ void MainWindow::refresh()
     set(spTW_, s.tabletArea.width); set(spTH_, s.tabletArea.height); set(spTX_, s.tabletArea.x); set(spTY_, s.tabletArea.y);
     set(spRot_, s.tabletArea.rotation);
     ckLock_->setChecked(s.lockAspect); ckClip_->setChecked(s.clip); ckLimit_->setChecked(s.limit);
+    cbOutput_->setCurrentIndex(cbOutput_->findData(int(s.outputMode)));
     spMW_->setValue(s.display.width); spMH_->setValue(s.display.height);
     set(spMWmm_, s.display.widthMm); set(spMHmm_, s.display.heightMm);
     syncing_ = false;
@@ -443,7 +464,7 @@ void MainWindow::updateStatus(const QString& extra)
         const QString tp = info_.value("touch_path").toString();
         parts << (tp.isEmpty() ? QStringLiteral("panel: not attached (see Console)") : QStringLiteral("panel: %1").arg(tp));
         const QString vp = info_.value("tablet_path").toString();
-        if (!vp.isEmpty()) parts << QStringLiteral("virtual tablet: %1").arg(vp);
+        if (!vp.isEmpty()) parts << QStringLiteral("virtual device: %1").arg(vp);
         if (isDirty()) parts << QStringLiteral("unapplied changes");
     }
     const QJsonObject panel = info_.value("panel").toObject();

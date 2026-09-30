@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 
     const QString defaultSocket = t2t::defaultControlEndpoint();
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("Tablet area and display area for a touch panel used as a pen tablet"));
+    parser.setApplicationDescription(QStringLiteral("Tablet area and display area for a touch panel used as a tablet"));
     parser.addHelpOption();
     parser.addVersionOption();
     QCommandLineOption optSocket({"k", "socket"}, QStringLiteral("Daemon control socket"), QStringLiteral("path"), defaultSocket);

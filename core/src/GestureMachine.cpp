@@ -17,13 +17,6 @@ void GestureMachine::setSettings(const Settings& s)
     updateState();
 }
 
-void GestureMachine::setRawRange(const RawRange& raw)
-{
-    raw_ = raw;
-    mapper_ = Mapper(settings_, raw_);
-    updateState();
-}
-
 GestureMachine::Slot* GestureMachine::find(int slot)
 {
     auto it = std::find_if(slots_.begin(), slots_.end(), [&](const Slot& s) { return s.id == slot; });

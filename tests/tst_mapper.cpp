@@ -32,11 +32,10 @@ private slots:
     void millimeters()
     {
         const Mapper m(Settings::defaults(), kRaw);
-        double mx, my;
-        m.toMm(1919, 1079, mx, my);
-        QCOMPARE(mx, 165.0); QCOMPARE(my, 100.0);
-        m.toMm(0, 0, mx, my);
-        QCOMPARE(mx, 0.0); QCOMPARE(my, 0.0);
+        MapResult r = m.map(1919, 1079);
+        QCOMPARE(r.mmX, 165.0); QCOMPARE(r.mmY, 100.0);
+        r = m.map(0, 0);
+        QCOMPARE(r.mmX, 0.0); QCOMPARE(r.mmY, 0.0);
     }
 
     void quadrantAreaFillsDisplay()

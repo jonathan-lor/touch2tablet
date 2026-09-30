@@ -1,10 +1,5 @@
-// touch2tabletd: present a supported touch panel (Panels.h) as a virtual pen tablet (Linux).
-//
-//   touch2tabletd [--settings PATH] [--socket PATH] [--no-device]
-//   touch2tabletd --identify | --print-udev-rules | --print-panel-table
-//
-// Settings: JSON as written by the GUI (see README).  Missing file = defaults.
-// Control socket: see ControlServer.h.  --no-device serves the socket without touching hardware.
+// touch2tabletd: present a supported touch panel (Panels.h) as an absolute mouse or a pen tablet.
+// Options: --help.  Settings: README.  Control socket: docs/protocol.md.
 #include "ControlServer.h"
 #include "Daemon.h"
 #ifdef Q_OS_LINUX
@@ -12,7 +7,7 @@
 #endif
 #ifdef T2T_ENABLE_LINUX_BACKEND
 #include "backend/linux/EvdevTouchSource.h"
-#include "backend/linux/UinputPenSink.h"
+#include "backend/linux/UinputSink.h"
 #endif
 #include "t2t/SettingsStore.h"
 #include "t2t/RuntimePaths.h"
@@ -61,7 +56,7 @@ int main(int argc, char** argv)
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1"));
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("Present a supported touch panel as a virtual pen tablet"));
+    parser.setApplicationDescription(QStringLiteral("Present a supported touch panel as an absolute mouse or a pen tablet"));
     parser.addHelpOption();
     parser.addVersionOption();
     // Default: the invoking user's config dir (~/.config/touch2tablet/settings.json); the systemd
@@ -175,7 +170,7 @@ int main(int argc, char** argv)
             lastErr = err;
             return std::unique_ptr<ITouchSource>(std::move(src));
         },
-        [] { return std::unique_ptr<IPenSink>(std::make_unique<UinputPenSink>()); }
+        [] { return std::unique_ptr<IPenSink>(std::make_unique<UinputSink>()); }
 #elif defined(T2T_ENABLE_WINDOWS_BACKEND)
         [&probeLog, noDevice]() -> std::unique_ptr<ITouchSource> {
             if (noDevice) return nullptr;

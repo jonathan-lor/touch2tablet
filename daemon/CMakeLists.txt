@@ -60,13 +60,15 @@ endif()
 if(T2T_ENABLE_LINUX_BACKEND)
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(LIBEVDEV REQUIRED IMPORTED_TARGET libevdev)
-  target_sources(touch2tabletd PRIVATE
+  # evdev touch capture and uinput output.
+  add_library(t2t_linux STATIC
     src/backend/linux/EvdevTouchSource.cpp
     src/backend/linux/EvdevTouchSource.h
-    src/backend/linux/UinputPenSink.cpp
-    src/backend/linux/UinputPenSink.h
+    src/backend/linux/UinputSink.cpp
+    src/backend/linux/UinputSink.h
   )
-  target_link_libraries(touch2tabletd PRIVATE PkgConfig::LIBEVDEV)
+  target_link_libraries(t2t_linux PUBLIC t2t_daemonlib PkgConfig::LIBEVDEV)
+  target_link_libraries(touch2tabletd PRIVATE t2t_linux)
   target_compile_definitions(touch2tabletd PRIVATE T2T_ENABLE_LINUX_BACKEND)
 elseif(NOT WIN32)
   message(STATUS "No hardware backend: touch2tabletd requires --no-device")

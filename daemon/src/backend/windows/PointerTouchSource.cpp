@@ -61,9 +61,8 @@ std::unique_ptr<PointerTouchSource> PointerTouchSource::probe(QString* error)
     source->window_ = CreateWindowExW(0, windowClass, L"", 0, 0, 0, 0, 0, HWND_MESSAGE,
                                      nullptr, cls.hInstance, source.get());
     if (!source->window_) { *error = winError("CreateWindowEx"); return {}; }
-    // Redirection alone does not opt out of Windows' touch rings/gesture UI.
-    // Scope the opt-out to our capture window so ordinary touch is unchanged
-    // when tablet mode is stopped (the window is then destroyed).
+    // Redirection keeps Windows' touch feedback and gestures; turn them off for this
+    // window only, so ordinary touch is unaffected once capture stops.
     const BOOL feedback = FALSE;
     for (const auto type : {FEEDBACK_TOUCH_CONTACTVISUALIZATION, FEEDBACK_TOUCH_TAP,
             FEEDBACK_TOUCH_DOUBLETAP, FEEDBACK_TOUCH_PRESSANDHOLD,
@@ -75,10 +74,8 @@ std::unique_ptr<PointerTouchSource> PointerTouchSource::probe(QString* error)
     if (!RegisterPointerInputTarget(source->window_, PT_TOUCH)) {
         *error = winError("RegisterPointerInputTarget"); return {};
     }
-    // A null class cursor does not clear the input thread's existing cursor.
-    // This invisible capture window must not supply a second cursor at the
-    // original touch location. The destination app owns the injected mouse's
-    // cursor; only clear the capture thread's cursor, not the system theme.
+    // Clear this thread's cursor so the capture window shows no second cursor
+    // at the touch point (a null class cursor is not enough).
     SetCursor(nullptr);
     source->capturing_ = true;
     source->watchdog_.start(1000);

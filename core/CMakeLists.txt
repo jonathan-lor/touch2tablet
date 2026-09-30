@@ -1,5 +1,4 @@
-# Platform-neutral core: settings model, mapper, gesture machine, protocol types.
-# Depends on QtCore only.  No evdev, uinput or QtGui here.
+# Platform-neutral core: settings, mapping and the gesture machine.  QtCore only.
 add_library(t2t_core STATIC
   src/Settings.cpp
   src/Mapper.cpp

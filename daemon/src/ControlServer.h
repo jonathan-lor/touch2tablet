@@ -1,16 +1,4 @@
-// Control socket: newline-delimited JSON over a QLocalServer Unix socket.
-//
-//   {"op":"get"}                      -> {"ok":true,"settings":{...},"info":{...}}
-//   {"op":"apply","settings":{...}}   -> live, merged onto current, not persisted
-//   {"op":"save","settings":{...}}    -> apply + write the settings file
-//   {"op":"reset"}                    -> defaults (not persisted)
-//   {"op":"log"}                      -> {"ok":true,"lines":[...]}
-//   {"op":"subscribe"}                -> {"ok":true,"proto":1,settings,info,lines} then a stream of
-//                                        {"ev":"pos"|"log"|"settings"|"device", ...}
-//   pos: fingers, raw [x,y], mm [x,y], out [x,y], inside, ignored
-//   info: connected, touch_path, raw {xmin..}, panel {name, width_mm, height_mm}, tablet_path,
-//         settings_path, proto
-// Every request may carry "id", echoed in the reply.  Bad JSON -> {"ok":false,"error":"bad json"}.
+// Control socket: newline-delimited JSON over a QLocalServer (a Unix socket, or a named pipe on Windows).
 #pragma once
 
 #include "Daemon.h"
@@ -33,7 +21,7 @@ class ControlServer : public QObject {
     Q_OBJECT
 public:
     struct Config {
-        QString socketName;     // full path
+        QString socketName;     // socket path, or pipe name on Windows
         QString settingsPath;   // where "save" writes
         int maxLogLines = 300;
         int posRateHz = 120;    // cap for "pos" events while a finger is down

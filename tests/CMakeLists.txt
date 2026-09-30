@@ -15,6 +15,10 @@ t2t_add_test(tst_control t2t_daemonlib fakes.h)
 t2t_add_test(tst_panels t2t_daemonlib)
 target_compile_definitions(tst_panels PRIVATE T2T_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 
+if(T2T_ENABLE_LINUX_BACKEND)
+  t2t_add_test(tst_linux_uinput t2t_linux)
+endif()
+
 if(WIN32)
   t2t_add_test(tst_windows_touch t2t_windows)
   t2t_add_test(tst_windows_mouse t2t_windows)

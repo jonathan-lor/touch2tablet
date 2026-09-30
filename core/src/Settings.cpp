@@ -28,6 +28,14 @@ bool flag(const QJsonObject& o, const char* key, bool current)
     return v.isBool() ? v.toBool() : current;
 }
 
+OutputMode mode(const QJsonObject& o, OutputMode current)
+{
+    const QString v = o.value(QLatin1String("output_mode")).toString();
+    if (v == u"mouse") return OutputMode::Mouse;
+    if (v == u"pen") return OutputMode::Pen;
+    return current;
+}
+
 QJsonObject section(const QJsonObject& o, const char* key)
 {
     const QJsonValue v = o.value(QLatin1String(key));
@@ -71,6 +79,7 @@ Settings Settings::applied(const Settings& base, const QJsonObject& json)
     s.clip = flag(json, "clip", s.clip);
     s.limit = flag(json, "limit", s.limit);
     s.lockAspect = flag(json, "lock_aspect", s.lockAspect);
+    s.outputMode = mode(json, s.outputMode);
     return s;
 }
 
@@ -90,6 +99,7 @@ QJsonObject Settings::toJson() const
         {"clip", clip},
         {"limit", limit},
         {"lock_aspect", lockAspect},
+        {"output_mode", outputMode == OutputMode::Pen ? "pen" : "mouse"},
     };
 }
 

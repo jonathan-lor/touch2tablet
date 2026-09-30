@@ -1,9 +1,8 @@
 # Supported Panels
 
-Any slotted multitouch panel (`ABS_MT_SLOT` + `ABS_MT_POSITION_X/Y`, e.g. `hid-multitouch` or
-`goodix`) should work, but the daemon will only grab the ones explicitly listed here.
-
-DO NOT EDIT THIS TABLE MANUALLY! It's generated from [`panels.json`](../panels.json).
+Any slotted multitouch panel (`ABS_MT_SLOT` + `ABS_MT_POSITION_X/Y`, e.g. driven by `hid-multitouch`
+or `goodix`) should work, but the daemon only grabs the panels listed here. The table is generated
+from [`panels.json`](../panels.json); edit that instead.
 
 <!-- panels:begin -->
 | Panel | Bus | ID | evdev name | Glass | Notes |
@@ -13,21 +12,20 @@ DO NOT EDIT THIS TABLE MANUALLY! It's generated from [`panels.json`](../panels.j
 
 ## Adding a Panel
 
-The authoritative list you should edit is [`panels.json`](../panels.json). It gets built into the daemon, and the udev rule and
-the table above are rendered from it. A panel is matched on its evdev bus:vendor:product ID and its evdev name.
+A panel is matched on its evdev bus:vendor:product ID and its evdev name.
 
 1. Plug the panel in and run `build/daemon/touch2tabletd --identify` (after a normal build, see
-   [CONTRIBUTING.md](../CONTRIBUTING.md)). It'll print a ready-made entry for every multitouch device. With `sudo` it can
-   also read the size from devices that report one.
-2. Paste the entry into `panels.json`. `bus`, `vendor`, `product` and `evdev_name` identify the
-   panel and come from the device. Leave them as printed. You supply:
-   - `name`: what the GUI and logs call it. Ideally, describe what a buyer would recognize (brand, size,
+   [CONTRIBUTING.md](../CONTRIBUTING.md)). It prints a ready-made entry for every multitouch
+   device; with `sudo` it can also read the size from devices that report one.
+2. Paste the entry into `panels.json`. Keep `bus`, `vendor`, `product` and `evdev_name` as
+   printed, and fill in:
+   - `name`: what the GUI and logs call it, ideally what a buyer would recognize (brand, size,
      connection). Don't name a controller chip the device doesn't report.
    - `width_mm` / `height_mm`: the active glass area. Keep the size `--identify` printed if there
-     is one, else use the datasheet or listing, else measure. The aspect ratio is what matters.
+     is one, else use the datasheet or listing, else measure. The aspect ratio matters most.
    - `notes` (optional): anything else, e.g. how it is sold or which driver binds it.
-3. Run `scripts/update-docs.sh` (rewrites the table above), then `scripts/install-user.sh`
-   (rebuilds, reinstalls the udev rule and restarts the daemon).
+3. Run `scripts/update-docs.sh` to rewrite the table above, then `scripts/install-user.sh` to
+   rebuild, reinstall the udev rule and restart the daemon.
 4. Commit `panels.json` and `docs/supported-panels.md`.
 
-`ctest` will reject a malformed entry, a duplicate panel, a misspelled key, or a stale table.
+`ctest` rejects a malformed entry, a duplicate panel, a misspelled key or a stale table.

@@ -45,7 +45,7 @@ void Daemon::attach(std::unique_ptr<ITouchSource> src)
     auto sink = makeSink_();
     QString err;
     if (!sink || !sink->open(settings_, &err)) {
-        emit log(QStringLiteral("cannot create virtual tablet: %1").arg(err));
+        emit log(QStringLiteral("cannot create virtual device: %1").arg(err));
         return;   // keep scanning; the source is dropped and re-probed next time
     }
     source_ = std::move(src);
@@ -70,10 +70,10 @@ void Daemon::attach(std::unique_ptr<ITouchSource> src)
     });
 
     scanTimer_.stop();
-    emit log(QStringLiteral("grabbed %1 (%2, %3) raw %4..%5 x %6..%7; virtual tablet at %8")
+    emit log(QStringLiteral("grabbed %1 (%2, %3) raw %4..%5 x %6..%7; %8 at %9")
                  .arg(info.path, info.name, info.panel->name)
                  .arg(info.range.xmin).arg(info.range.xmax).arg(info.range.ymin).arg(info.range.ymax)
-                 .arg(sink_->path()));
+                 .arg(sink_->kind(), sink_->path()));
     emit deviceChanged(true);
 }
 
@@ -121,7 +121,7 @@ void Daemon::recoverOutput()
     const QString reason = sink_->lastError();
     // Wait until any native input callback has returned before deleting its source.
     QTimer::singleShot(0, source_.get(), [this, reason] {
-        detach(QStringLiteral("pen output failed: %1").arg(reason));
+        detach(QStringLiteral("output failed: %1").arg(reason));
         if (running_) scanTimer_.start(scanIntervalMs);
     });
 }
@@ -148,13 +148,14 @@ void Daemon::applySettings(const Settings& requested)
     const Settings s = fitted(requested);
     settings_ = s;
     if (sink_ && sink_->needsReopen(s)) {
-        emit log(QStringLiteral("display size changed: recreating virtual tablet"));
         if (machine_)
             machine_->reset();
         sink_->close();
         QString err;
-        if (!sink_->open(s, &err))
-            emit log(QStringLiteral("cannot recreate virtual tablet: %1").arg(err));
+        if (sink_->open(s, &err))
+            emit log(QStringLiteral("virtual device recreated: %1 at %2").arg(sink_->kind(), sink_->path()));
+        else
+            emit log(QStringLiteral("cannot recreate virtual device: %1").arg(err));
     }
     if (machine_)
         machine_->setSettings(s);

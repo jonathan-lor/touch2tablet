@@ -28,20 +28,18 @@ struct MapResult {
 
 class Mapper {
 public:
-    Mapper() = default;
     Mapper(const Settings& s, const RawRange& raw);
 
     MapResult map(int rx, int ry) const;
-    void toMm(int rx, int ry, double& mmX, double& mmY) const;
 
 private:
     RawRange raw_;
-    double tabletW_ = 165.0, tabletH_ = 100.0;
-    double areaW_ = 165.0, areaH_ = 100.0, areaX_ = 82.5, areaY_ = 50.0;
-    double cos_ = 1.0, sin_ = 0.0;
-    double dispW_ = 2560.0, dispH_ = 1440.0, dispX0_ = 0.0, dispY0_ = 0.0;
-    int screenW_ = 2560, screenH_ = 1440;
-    bool clip_ = true;
+    double tabletW_, tabletH_;
+    double areaW_, areaH_, areaX_, areaY_;
+    double cos_, sin_;
+    double dispW_, dispH_, dispX0_, dispY0_;
+    int screenW_, screenH_;
+    bool clip_;
 };
 
 }  // namespace t2t

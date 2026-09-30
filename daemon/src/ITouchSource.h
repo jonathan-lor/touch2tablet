@@ -1,7 +1,5 @@
 // Platform backend interface: a multitouch panel delivering slot frames.
-//
-// Linux: EvdevTouchSource (libevdev, exclusive grab).  Tests inject fakes.
-// The daemon owns the clock; frames are stamped on arrival.
+// Linux: EvdevTouchSource.  Windows: PointerTouchSource.  Tests inject fakes.
 #pragma once
 
 #include "Panels.h"

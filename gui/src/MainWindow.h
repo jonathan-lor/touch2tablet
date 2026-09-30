@@ -8,6 +8,7 @@
 
 #include <QAction>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QJsonObject>
 #include <QLabel>
@@ -67,6 +68,7 @@ private:
     QDoubleSpinBox *spDW_ = nullptr, *spDH_ = nullptr, *spDX_ = nullptr, *spDY_ = nullptr;
     QDoubleSpinBox *spTW_ = nullptr, *spTH_ = nullptr, *spTX_ = nullptr, *spTY_ = nullptr, *spRot_ = nullptr;
     QCheckBox *ckLock_ = nullptr, *ckClip_ = nullptr, *ckLimit_ = nullptr;
+    QComboBox* cbOutput_ = nullptr;
     QLabel *panelName_ = nullptr, *glassSize_ = nullptr;
     QSpinBox *spMW_ = nullptr, *spMH_ = nullptr;
     QDoubleSpinBox *spMWmm_ = nullptr, *spMHmm_ = nullptr;

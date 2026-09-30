@@ -1,6 +1,6 @@
 # touch2tablet
 
-User mode daemon and [OpenTabletDriver](https://github.com/OpenTabletDriver/OpenTabletDriver)-style GUI that turns a multitouch panel into an absolute-positioned tablet. Supports Linux and Windows; see [Windows setup and limitations](docs/windows.md).
+Cross platform, user mode daemon and [OpenTabletDriver](https://github.com/OpenTabletDriver/OpenTabletDriver)-style GUI that turns a multitouch panel into an absolute-positioned tablet. Runs on Linux and [Windows](docs/windows.md).
 
 ![touch2tablet GUI screenshot](assets/gui_screenshot.png)
 
@@ -12,22 +12,21 @@ User mode daemon and [OpenTabletDriver](https://github.com/OpenTabletDriver/Open
 
 ## Supported Hardware
 
-See [Supported Panels](docs/supported-panels.md) for compatible devices and steps for adding one.
+See [Supported Panels](docs/supported-panels.md) for compatible devices and how to add one.
 
 ## Quick Start (Linux)
 
-touch2tablet requires Linux with udev and a systemd user session, CMake >=3.22,
-Ninja, a C++20 compiler, Qt >=6.5, `pkg-config`, and libevdev.
-On Debian-based distributions, install the build dependencies with:
+You need udev, a systemd user session, CMake 3.22+, Ninja, a C++20 compiler, Qt 6.5+,
+`pkg-config` and libevdev. On Debian-based distributions:
 
 ```bash
 sudo apt install build-essential cmake ninja-build pkg-config qt6-base-dev libevdev-dev
 ./scripts/install-user.sh
 ```
 
-Then, plug in a supported panel and the service should grab it and present
-"touch2tablet Pen Tablet". Open **touch2tablet** from the application menu, or
-run `touch2tablet`, to edit the mapping.
+Plug in a supported panel and the service should grab it and present "touch2tablet Absolute
+Mouse" ("touch2tablet Pen Tablet" in [pen mode](#output-modes)). Open **touch2tablet** from the
+application menu, or run `touch2tablet`, to edit the mapping.
 
 The daemon runs as a systemd user service:
 
@@ -40,56 +39,64 @@ systemctl --user disable --now touch2tablet     # back to plain touchscreen beha
 
 ## Settings and Presets
 
-Settings are in `~/.config/touch2tablet/settings.json` (`--settings`). In the
-GUI, **Apply** changes the live mapping and **Save** actually writes and persists it.
-On Windows, settings are in `%LOCALAPPDATA%\touch2tablet`.
-The glass size comes from the panel's entry in `panels.json`.
-`display.output` is a Windows monitor device name; empty follows the primary monitor. Linux ignores this field.
+Settings live in `~/.config/touch2tablet/settings.json` (`%LOCALAPPDATA%\touch2tablet\settings.json` on Windows).
 
 ```
-display       {width, height, width_mm, height_mm, output}   monitor the virtual tablet spans
-display_area  {width, height, x, y}                  px, center-based
-tablet        {width, height}                        glass active area, mm; the daemon sets it from the panel
-tablet_area   {width, height, x, y, rotation}        mm, center-based, degrees clockwise
-clip, limit                                           bools
-lock_aspect                                           bool; GUI hint only
+display       {width, height, width_mm, height_mm, output}  monitor size in px and mm
+display_area  {width, height, x, y}                         px, center-based
+tablet        {width, height}                               glass size in mm, from panels.json
+tablet_area   {width, height, x, y, rotation}               mm, center-based, degrees clockwise
+clip, limit   bools                                         see How It Works
+lock_aspect   bool                                          GUI hint only
+output_mode   "mouse" or "pen"                              see Output Modes
 ```
 
-Presets are settings files in `~/.config/touch2tablet/presets/` (next to the
-settings file). Use **File > Save as preset...** to write the current settings
-there and **File > Presets** to list them. A preset can be partial, e.g. only `tablet_area`.
+`display.output` names a Windows monitor (empty means the primary one) and Linux ignores it.
+
+Presets are settings files in the `presets` folder next to the settings file. **File > Save as
+preset...** writes one and **File > Presets** applies one. A preset can be partial, e.g. only
+`tablet_area`.
 
 ## How It Works
 
-touch2tablet grabs the supported touchscreen's multitouch input and turns the
-first active finger into a single virtual pen. Linux applications then will see that "pen"
-as an absolute-positioning instead of a touchscreen.
+touch2tablet grabs the panel's multitouch input and turns the first finger into a single
+absolute pointer, so applications see an absolute mouse (or a pen tablet in pen mode) instead of
+a touchscreen. The daemon:
 
-The daemon maps the finger by:
+1. converts the panel's raw coordinates into millimeters on the glass,
+2. applies the tablet area (position, size and rotation),
+3. scales the result into the display area,
+4. and moves the virtual mouse or pen there.
 
-1. Converting the panel's raw coordinates into millimeters on the physical glass.
-2. Applying the configured tablet area, including its position, size, and rotation.
-3. Scaling that position into the configured display area.
-4. Sending the resulting screen coordinates through a virtual `uinput` tablet.
-
-The final coordinates are always kept within the configured display. When
-`clip` is enabled, a touch outside the tablet area is held at the area's nearest
-edge. When `limit` is enabled, a stroke that begins outside the tablet area is
-ignored until *every* finger has lifted.
+Output always stays on the display. With `clip`, a touch outside the tablet area is held at the
+area's nearest edge. With `limit`, a stroke that starts outside the tablet area is ignored until
+*every* finger has lifted.
 
 ### Touch Behavior
 
-Only your first active finger controls the pen. Additional contacts won't affect
-the stroke. Your finger basically acts as a pressed pen tip, with no pressure, independent
-hover, or right-click support. When your finger lifts, the stroke and proximity
-end immediately and any fingers still touching the panel are ignored until all of
-them have lifted.
+Only the first finger controls the pointer; additional contacts don't affect the stroke. The
+finger acts as a held left button (a pressed pen tip in pen mode), with no pressure, hover or
+right click. When it lifts, the stroke ends, and any fingers still on the panel are ignored
+until all of them have lifted.
+
+### Output Modes
+
+`output_mode` (**Output mode** in the GUI) sets what applications see:
+
+- `mouse` (default): an absolute mouse, which works wherever a mouse does. On Wayland,
+  applications that lock the pointer for relative motion, such as games with a raw or high
+  precision mouse option, get no movement from it; turn that option off. A left-handed mouse
+  setting turns taps into right clicks.
+- `pen` (Linux only): a pen tablet, for applications that read pen input. Some applications
+  treat pen input differently from a mouse, or not at all.
+
+In mouse mode the compositor spreads the device over the whole desktop, so with several monitors
+set `display` to the whole desktop and place `display_area` on the monitor you want.
 
 ## Development
 
-[CONTRIBUTING.md](CONTRIBUTING.md).
-
-The daemon's control socket protocol: [docs/protocol.md](docs/protocol.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md). The control socket protocol is in
+[docs/protocol.md](docs/protocol.md).
 
 ## Uninstall
 
@@ -106,9 +113,8 @@ sudo udevadm control --reload
 sudo udevadm trigger
 ```
 
-This leaves settings and presets in `~/.config/touch2tablet/` so they can be
-reused after reinstalling. Delete that directory separately if they are no
-longer wanted.
+This leaves settings and presets in `~/.config/touch2tablet/`; delete that directory too if you no
+longer want them.
 
 ## License
 

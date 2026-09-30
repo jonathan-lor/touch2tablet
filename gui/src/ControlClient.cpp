@@ -15,7 +15,7 @@ ControlClient::ControlClient(QString socketName, QObject* parent)
     connect(&sock_, &QLocalSocket::errorOccurred, this, [this](QLocalSocket::LocalSocketError) {
         if (!connected_) {
             emit stateChanged(false, QStringLiteral("daemon not reachable at %1 (%2)").arg(name_, sock_.errorString()));
-            retry_.start(retryIntervalMs);
+            retry_.start(kRetryMs);
         }
     });
 }
@@ -56,7 +56,7 @@ void ControlClient::onLost(const QString& why)
         if (cb) cb(QJsonObject{{"ok", false}, {"error", "connection lost"}});
     pending_.clear();
     if (was) emit stateChanged(false, why);
-    retry_.start(retryIntervalMs);
+    retry_.start(kRetryMs);
 }
 
 void ControlClient::request(QJsonObject req, Callback cb)

@@ -22,18 +22,11 @@ Mapper::Mapper(const Settings& s, const RawRange& raw)
     sin_ = std::sin(r);
 }
 
-void Mapper::toMm(int rx, int ry, double& mmX, double& mmY) const
-{
-    const double xr = std::max(1, raw_.xmax - raw_.xmin);
-    const double yr = std::max(1, raw_.ymax - raw_.ymin);
-    mmX = (rx - raw_.xmin) / xr * tabletW_;
-    mmY = (ry - raw_.ymin) / yr * tabletH_;
-}
-
 MapResult Mapper::map(int rx, int ry) const
 {
     MapResult m;
-    toMm(rx, ry, m.mmX, m.mmY);
+    m.mmX = double(rx - raw_.xmin) / std::max(1, raw_.xmax - raw_.xmin) * tabletW_;
+    m.mmY = double(ry - raw_.ymin) / std::max(1, raw_.ymax - raw_.ymin) * tabletH_;
     const double dx = m.mmX - areaX_, dy = m.mmY - areaY_;
     // area is rotated clockwise by `rotation`; bring the point into the area's frame
     const double lx = dx * cos_ + dy * sin_;

@@ -85,8 +85,7 @@ std::vector<PointerDevice> pointerDevices(QString* error)
         } else {
             d.errors.append(winError(QStringLiteral("GetPointerDeviceProperties")));
         }
-        // Diagnostic candidate only: an exact firmware-name check is still required
-        // before a production backend may take over a panel sharing these USB IDs.
+        // Matched on USB ids only; PointerTouchSource also checks the name before capturing.
         if (info.pointerDeviceType == POINTER_DEVICE_TYPE_TOUCH && d.usagePage == 0x0d && d.usage == 0x04) {
             for (const Panel& p : panels()) {
                 if (p.bus == 3 && UINT(p.vendor) == d.vendor && UINT(p.product) == d.product) {

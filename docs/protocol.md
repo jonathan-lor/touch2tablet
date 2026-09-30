@@ -1,19 +1,18 @@
 # Control Socket
 
-The daemon listens on `$XDG_RUNTIME_DIR/touch2tablet/control.sock` by default;
-`--socket` selects another path. The socket is user-only and carries one JSON
-object per line. Every request may include an `"id"`, which is echoed in its
-reply. Successful replies contain `"ok":true`; errors contain `"ok":false` and
-an `"error"` string.
-
-`touch2tabletd --no-device` serves the socket without opening touch hardware.
-
-On Windows the endpoint is a per-user named pipe, shared by the GUI and daemon.
-Use `scripts/windows-control.ps1` to send requests to its default name.
+The daemon listens on `$XDG_RUNTIME_DIR/touch2tablet/control.sock` by default (`--socket`
+selects another path; on Windows it is a per-user named pipe). The socket is user-only and
+carries one JSON object per line:
 
 ```bash
 printf '{"op":"get"}\n' | nc -U "$XDG_RUNTIME_DIR/touch2tablet/control.sock"
 ```
+
+On Windows, `scripts/windows-control.ps1` sends requests to the pipe. `touch2tabletd --no-device`
+serves the socket without opening touch hardware.
+
+Every request may include an `"id"`, which is echoed in its reply. Successful replies contain
+`"ok":true`; errors contain `"ok":false` and an `"error"` string.
 
 ## Requests
 
@@ -32,8 +31,8 @@ The `settings` values below use the [settings schema](../README.md#settings-and-
 | `{"op":"subscribe"}` | Returns `proto`, `settings`, `info`, and recent `lines`, then streams events on the same connection |
 
 The `info` object contains `connected`, `running`, `touch_path`, `raw`, `panel`,
-`tablet_path`, `settings_path`, and `proto`. Device-specific fields are `null`
-while no panel is connected.
+`tablet_path` (the virtual device, in either output mode), `settings_path`, and
+`proto`. Device-specific fields are `null` while no panel is connected.
 
 `info.frames_processed` counts input frames since daemon startup. While attached,
 `info.input` contains `fingers`, `active`, and the last `raw` and mapped `out`

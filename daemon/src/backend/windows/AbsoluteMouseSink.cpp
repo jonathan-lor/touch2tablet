@@ -80,15 +80,15 @@ bool AbsoluteMouseSink::move(int x, int y, DWORD button)
         b->monitor.right - b->monitor.left - 1, std::max(1, display_.width - 1));
     const LONG py = b->monitor.top + MulDiv(std::clamp(y, 0, display_.height - 1),
         b->monitor.bottom - b->monitor.top - 1, std::max(1, display_.height - 1));
-    // Target the pixel centre in SendInput's 0..65535 virtual-desktop space.
-    const auto normalise = [](LONG pixel, LONG origin, LONG size) -> LONG {
+    // Target the pixel center in SendInput's 0..65535 virtual-desktop space.
+    const auto normalize = [](LONG pixel, LONG origin, LONG size) -> LONG {
         return LONG(std::clamp<qint64>(((qint64(pixel) - origin) * 65536 + 32768) / size, 0, 65535));
     };
     INPUT input{};
     input.type = INPUT_MOUSE;
     input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK | button;
-    input.mi.dx = normalise(px, b->desktop.left, b->desktop.right - b->desktop.left);
-    input.mi.dy = normalise(py, b->desktop.top, b->desktop.bottom - b->desktop.top);
+    input.mi.dx = normalize(px, b->desktop.left, b->desktop.right - b->desktop.left);
+    input.mi.dy = normalize(py, b->desktop.top, b->desktop.bottom - b->desktop.top);
     if (send(input)) return true;
     release();
     return false;
